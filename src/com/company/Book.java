@@ -17,8 +17,7 @@ public class Book {
 
     public Book(FileService file, String name, int availableCount, String authors) throws IOException {
         this.file = file;
-        this.id = file.length() / allDataLen() + 1;
-        System.out.println(id);
+        this.id = file.length() / dataLength() + 1;
         this.name = name;
         this.authors = authors;
         this.availableCount = availableCount;
@@ -62,7 +61,7 @@ public class Book {
 
     public ArrayList<Book> getAll() throws IOException {
         ArrayList<Book> books = new ArrayList<>();
-        for (int i = 1; i <= file.length() / allDataLen(); i++) {
+        for (int i = 1; i <= file.length() / dataLength(); i++) {
             searchById(i);
             books.add(new Book(this));
         }
@@ -70,7 +69,7 @@ public class Book {
     }
 
     public ResultType<Boolean, Book> searchById(long id) throws IOException {
-        long seek = this.seek = findSeek(id);
+        long seek = this.seek = (id - 1) * dataLength();
         if (seek >= file.length() || seek < 0)
             return new ResultType<>(false, null);
         this.id = file.readLong(seek);
@@ -83,14 +82,16 @@ public class Book {
         return new ResultType<>(true, this);
     }
 
-    public ResultType<Boolean, String> updateAvailableCount(long bookId, int count) throws IOException {
+    public void updateAvailableCount(long bookId, int count) throws IOException {
         ResultType<Boolean, Book> search = searchById(bookId);
-        if (!search.getValue1())
-            return new ResultType<>(false, "book by id " + bookId + " not found!");
+        if (!search.getValue1()) {
+            new ResultType<>(false, "book by id " + bookId + " not found!");
+            return;
+        }
         this.availableCount += count;
         file.seek(seek);
         write();
-        return new ResultType<>(true, "successful, new available count: " + this.availableCount);
+        new ResultType<>(true, "successful, new available count: " + this.availableCount);
     }
 
     public ResultType<Boolean, String> update(long bookId, String name, String authors, int availableCount) throws IOException {
@@ -110,15 +111,12 @@ public class Book {
         return "Book{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                "authors=" + authors +
                 ", availableCount=" + availableCount +
                 '}';
     }
 
-    private long findSeek(long id) {
-        return (id - 1) * allDataLen();
-    }
-
-    private long allDataLen() {
+    private long dataLength() {
         return 8 + StringLength.bookName * 2 + StringLength.bookAuthors * 2 + 4;
     }
 }

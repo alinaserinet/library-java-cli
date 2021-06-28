@@ -73,7 +73,7 @@ public class MemberPage {
             System.err.println(memberResult.getValue2());
             return;
         }
-        ResultType<Boolean, String> bookResult = book.updateAvailableCount(id, -1);
+        book.updateAvailableCount(id, -1);
         System.out.println(memberResult.getValue2());
     }
 
@@ -92,7 +92,7 @@ public class MemberPage {
             return;
         }
 
-        ResultType<Boolean, String> bookResult = book.updateAvailableCount(id, 1);
+        book.updateAvailableCount(id, 1);
         System.out.println(memberResult.getValue2());
     }
 
@@ -106,7 +106,7 @@ public class MemberPage {
         booksList(myBooks);
     }
 
-    protected static void booksList(ArrayList<Book> books) throws IOException {
+    protected static void booksList(ArrayList<Book> books) {
         TableDrawer.booksHead();
         for (Book item : books){
             TableDrawer.bookPreview(

@@ -97,7 +97,7 @@ public class AdminPage extends MemberPage {
         System.out.println(result.getValue2());
     }
 
-    private static void membersList(ArrayList<Member> members) throws IOException {
+    private static void membersList(ArrayList<Member> members) {
         TableDrawer.memberHead();
         for (Member item : members) {
             TableDrawer.memberPreview(

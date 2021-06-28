@@ -43,7 +43,7 @@ public class Member {
         this.password = member.password;
         this.role = member.role;
         this.books = new long[member.books.length];
-        for(int i = 0; i < this.books.length; i++)
+        for (int i = 0; i < this.books.length; i++)
             this.books[i] = member.books[i];
     }
 
@@ -70,7 +70,7 @@ public class Member {
     public ArrayList<Member> getAll() throws IOException {
         ArrayList<Member> members = new ArrayList<>();
         for (int i = 1; i <= file.length() / dataLength(); i++) {
-            searchById(i);
+            search(i);
             members.add(new Member(this));
         }
         return members;
@@ -86,10 +86,10 @@ public class Member {
             file.write(bookId);
     }
 
-    public boolean searchById(long id) throws IOException {
+    public ResultType<Boolean, Member> search(long id) throws IOException {
         long seek = this.seek = (id - 1) * dataLength();
         if (seek >= file.length() || seek < 0)
-            return false;
+            return new ResultType<>(false, null);
         this.id = file.readLong(seek);
         seek += 8;
         this.name = file.readString(seek, StringLength.userName);
@@ -104,13 +104,13 @@ public class Member {
             books[i] = file.readLong(seek);
             seek += 8;
         }
-        return true;
+        return new ResultType<>(true, this);
     }
 
     public ArrayList<Member> allMembersByBookId(long bookId) throws IOException {
         Set<Member> members = new HashSet<>();
         for(int i = 1; i <= file.length() / dataLength(); i++) {
-            searchById(i);
+            search(i);
             for(long book : this.books) {
                 if (book == bookId)
                     members.add(new Member(this));
@@ -120,7 +120,7 @@ public class Member {
     }
 
     public ResultType<Boolean, String> addBook(long userId, long bookId) throws IOException {
-        if(!searchById(userId))
+        if(!search(userId).getValue1())
             return new ResultType<>(false, "user by id " + userId + " not found!");
         int i = 0;
         for(; i < books.length; i++) {
@@ -137,7 +137,7 @@ public class Member {
     }
 
     public ResultType<Boolean, String> removeBook(long userId, long bookId) throws IOException {
-        if(!searchById(userId))
+        if(!search(userId).getValue1())
             return new ResultType<>(false, "user by id " + userId + " not found!");
         int i = 0;
         for(; i < books.length; i++) {
