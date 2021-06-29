@@ -103,7 +103,7 @@ public class AdminPage extends MemberPage {
             TableDrawer.memberPreview(
                     item.getId(),
                     item.getName() + " " + item.getFamily(),
-                    item.getRole(), item.booksId()
+                    item.getRole(), item.getBooksId()
             );
         }
         TableDrawer.memberFooter();

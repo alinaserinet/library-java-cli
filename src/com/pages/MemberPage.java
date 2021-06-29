@@ -58,17 +58,16 @@ public class MemberPage {
 
     private static void getBook() throws IOException {
         long id = Input.nextLong("Enter book id to get it:");
-        ResultType<Boolean, Book> search = book.searchById(id);
-        if(!search.getValue1()) {
+        boolean search = book.read(id);
+        if (!search) {
             System.err.println("book by id " + id + " not found!");
             return;
-        }
-        else if (search.getValue2().getAvailableCount() == 0) {
+        } else if (book.getAvailableCount() == 0) {
             System.err.println("a book with id " + id + " is not available now");
             return;
         }
 
-        ResultType<Boolean, String> memberResult = Main.session.addBook(Main.session.getId(), id);
+        ResultType<Boolean, String> memberResult = Main.session.getBook(Main.session.getId(), id);
         if (!memberResult.getValue1()) {
             System.err.println(memberResult.getValue2());
             return;
@@ -78,16 +77,16 @@ public class MemberPage {
     }
 
     private static void returnBook() throws IOException {
-        long id = Input.nextLong("Enter book id to get it:");
-        ResultType<Boolean, Book> search = book.searchById(id);
+        long id = Input.nextLong("Enter book id to return it:");
+        boolean search = book.read(id);
 
-        if(!search.getValue1()) {
+        if (!search) {
             System.err.println("book by id " + id + " not found!");
             return;
         }
 
-        ResultType<Boolean, String> memberResult = Main.session.removeBook(Main.session.getId(), id);
-        if(!memberResult.getValue1()) {
+        ResultType<Boolean, String> memberResult = Main.session.returnBook(Main.session.getId(), id);
+        if (!memberResult.getValue1()) {
             System.err.println(memberResult.getValue2());
             return;
         }
@@ -99,16 +98,18 @@ public class MemberPage {
     private static void myBooks() throws IOException {
         long[] myBooksId = Main.session.getBooks();
         ArrayList<Book> myBooks = new ArrayList<>();
-        for(long id : myBooksId) {
-            if(id != 0)
-                myBooks.add(new Book(book.searchById(id).getValue2()));
+        for (long id : myBooksId) {
+            if (id != 0) {
+                book.read(id);
+                myBooks.add(new Book(book));
+            }
         }
         booksList(myBooks);
     }
 
     protected static void booksList(ArrayList<Book> books) {
         TableDrawer.booksHead();
-        for (Book item : books){
+        for (Book item : books) {
             TableDrawer.bookPreview(
                     item.getId(), item.getName(),
                     item.getAuthors(), item.getAvailableCount()

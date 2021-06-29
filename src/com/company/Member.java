@@ -70,7 +70,7 @@ public class Member {
     public ArrayList<Member> getAll() throws IOException {
         ArrayList<Member> members = new ArrayList<>();
         for (int i = 1; i <= file.length() / dataLength(); i++) {
-            search(i);
+            read(i);
             members.add(new Member(this));
         }
         return members;
@@ -86,10 +86,10 @@ public class Member {
             file.write(bookId);
     }
 
-    public ResultType<Boolean, Member> search(long id) throws IOException {
+    public boolean read(long id) throws IOException {
         long seek = this.seek = (id - 1) * dataLength();
         if (seek >= file.length() || seek < 0)
-            return new ResultType<>(false, null);
+            return false;
         this.id = file.readLong(seek);
         seek += 8;
         this.name = file.readString(seek, StringLength.userName);
@@ -104,14 +104,14 @@ public class Member {
             books[i] = file.readLong(seek);
             seek += 8;
         }
-        return new ResultType<>(true, this);
+        return true;
     }
 
     public ArrayList<Member> allMembersByBookId(long bookId) throws IOException {
         Set<Member> members = new HashSet<>();
-        for(int i = 1; i <= file.length() / dataLength(); i++) {
-            search(i);
-            for(long book : this.books) {
+        for (int i = 1; i <= file.length() / dataLength(); i++) {
+            read(i);
+            for (long book : this.books) {
                 if (book == bookId)
                     members.add(new Member(this));
             }
@@ -119,44 +119,44 @@ public class Member {
         return new ArrayList<>(members);
     }
 
-    public ResultType<Boolean, String> addBook(long userId, long bookId) throws IOException {
-        if(!search(userId).getValue1())
+    public ResultType<Boolean, String> getBook(long userId, long bookId) throws IOException {
+        if (!read(userId))
             return new ResultType<>(false, "user by id " + userId + " not found!");
         int i = 0;
-        for(; i < books.length; i++) {
-            if(books[i] == 0) {
+        for (; i < books.length; i++) {
+            if (books[i] == 0) {
                 books[i] = bookId;
                 break;
             }
         }
-        if(i == books.length)
+        if (i == books.length)
             return new ResultType<>(false, "you can't get more book!");
         file.seek(seek);
         write();
         return new ResultType<>(true, "book by id " + bookId + " was received.");
     }
 
-    public ResultType<Boolean, String> removeBook(long userId, long bookId) throws IOException {
-        if(!search(userId).getValue1())
+    public ResultType<Boolean, String> returnBook(long userId, long bookId) throws IOException {
+        if (!read(userId))
             return new ResultType<>(false, "user by id " + userId + " not found!");
         int i = 0;
-        for(; i < books.length; i++) {
-            if(books[i] == bookId) {
+        for (; i < books.length; i++) {
+            if (books[i] == bookId) {
                 books[i] = 0;
                 break;
             }
         }
-        if(i == books.length)
+        if (i == books.length)
             return new ResultType<>(false, "This book is not in your list of books");
         file.seek(seek);
         write();
         return new ResultType<>(true, "book by id " + bookId + " was returned.");
     }
 
-    public String booksId() {
+    public String getBooksId() {
         StringBuilder items = new StringBuilder();
-        for(long book : books) {
-            if(book != 0)
+        for (long book : books) {
+            if (book != 0)
                 items.append(book).append(" , ");
         }
         return items.toString();

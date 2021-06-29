@@ -52,6 +52,15 @@ public class Book {
         return authors;
     }
 
+    public ArrayList<Book> getAll() throws IOException {
+        ArrayList<Book> books = new ArrayList<>();
+        for (int i = 1; i <= file.length() / dataLength(); i++) {
+            read(i);
+            books.add(new Book(this));
+        }
+        return books;
+    }
+
     public void write() throws IOException {
         file.write(id);
         file.write(name, StringLength.bookName);
@@ -59,19 +68,10 @@ public class Book {
         file.write(availableCount);
     }
 
-    public ArrayList<Book> getAll() throws IOException {
-        ArrayList<Book> books = new ArrayList<>();
-        for (int i = 1; i <= file.length() / dataLength(); i++) {
-            searchById(i);
-            books.add(new Book(this));
-        }
-        return books;
-    }
-
-    public ResultType<Boolean, Book> searchById(long id) throws IOException {
+    public boolean read(long id) throws IOException {
         long seek = this.seek = (id - 1) * dataLength();
         if (seek >= file.length() || seek < 0)
-            return new ResultType<>(false, null);
+            return false;
         this.id = file.readLong(seek);
         seek += 8;
         this.name = file.readString(seek, StringLength.bookName);
@@ -79,12 +79,12 @@ public class Book {
         this.authors = file.readString(seek, StringLength.bookAuthors);
         seek += StringLength.bookAuthors * 2;
         this.availableCount = file.readInt(seek);
-        return new ResultType<>(true, this);
+        return true;
     }
 
     public void updateAvailableCount(long bookId, int count) throws IOException {
-        ResultType<Boolean, Book> search = searchById(bookId);
-        if (!search.getValue1()) {
+        boolean search = read(bookId);
+        if (!search) {
             new ResultType<>(false, "book by id " + bookId + " not found!");
             return;
         }
@@ -95,8 +95,8 @@ public class Book {
     }
 
     public ResultType<Boolean, String> update(long bookId, String name, String authors, int availableCount) throws IOException {
-        ResultType<Boolean, Book> search = searchById(bookId);
-        if (!search.getValue1())
+        boolean search = read(bookId);
+        if (!search)
             return new ResultType<>(false, "book by id " + bookId + " not found!");
         this.name = name == null || name.equals("") || name.equals(" ") ? this.name : name;
         this.authors = name == null || authors.equals("") || authors.equals(" ") ? this.authors : authors;
